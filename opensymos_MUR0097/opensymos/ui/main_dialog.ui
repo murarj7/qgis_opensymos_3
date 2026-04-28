@@ -1,0 +1,1340 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainDialog</class>
+ <widget class="QDialog" name="MainDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>900</width>
+    <height>769</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="windowTitle">
+   <string>OpenSymos - Dispersion Model</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QTabWidget" name="tabWidget">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <widget class="QWidget" name="tab">
+      <attribute name="title">
+       <string>Settings</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_12">
+       <item>
+        <widget class="QGroupBox" name="groupBox_9">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>100</height>
+          </size>
+         </property>
+         <property name="title">
+          <string>Pollutant</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_13">
+          <item>
+           <widget class="QLabel" name="label_21">
+            <property name="text">
+             <string>Select pollutant:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="combo_pollutant">
+            <item>
+             <property name="text">
+              <string>Hydrogen sulfide (H2S)</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Hydrogen chloride (HCl)</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Hydrogen peroxide (H2O2)</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Dimethyl sulfide (C2H6S)</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Sulfur dioxide (SO2)</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Nitric oxide (NO)</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Nitrogen dioxide (NO2)</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Amonia (NH3)</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Carbon disulfide (CS2)</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Formaldehyde (CH2O)</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Nitrous oxide (N2O)</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Carbon monoxide (CO)</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Carbon dioxide (CO2)</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Metane (CH4)</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Higher hydrocarbons</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Methyl chloride (CH3Cl)</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Carbonyl sulphide (COS)</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Dust (PM10)</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox_10">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>100</height>
+          </size>
+         </property>
+         <property name="title">
+          <string>Limits</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_14">
+          <item>
+           <widget class="QLabel" name="label_22">
+            <property name="text">
+             <string>Set limit (µg/m³):</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QDoubleSpinBox" name="spin_limit">
+            <property name="maximum">
+             <double>99999999.989999994635582</double>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_7">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Expanding</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>828</width>
+           <height>443</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_terrain">
+      <attribute name="title">
+       <string>1. Terrain</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <widget class="QGroupBox" name="groupBox">
+         <property name="title">
+          <string>Terrain Data (Raster)</string>
+         </property>
+         <layout class="QFormLayout" name="formLayout">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label">
+            <property name="text">
+             <string>Terrain layer:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <layout class="QHBoxLayout" name="horizontalLayout_2">
+            <item>
+             <widget class="QComboBox" name="combo_terrain"/>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btn_refresh_layers">
+              <property name="toolTip">
+               <string>Refresh layer list</string>
+              </property>
+              <property name="text">
+               <string>🔄</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btn_load_raster">
+              <property name="toolTip">
+               <string>Load raster from file</string>
+              </property>
+              <property name="text">
+               <string>📁</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btn_zoom_terrain">
+              <property name="toolTip">
+               <string>Zoom to layer</string>
+              </property>
+              <property name="text">
+               <string>🔍</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox_2">
+         <property name="title">
+          <string>Layer Information</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_3">
+          <item>
+           <widget class="QLabel" name="lbl_terrain_info">
+            <property name="text">
+             <string>No layer selected</string>
+            </property>
+            <property name="textFormat">
+             <enum>Qt::RichText</enum>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <item>
+          <widget class="QPushButton" name="btn_test_terrain">
+           <property name="text">
+            <string>Test Data</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btn_show_in_map">
+           <property name="text">
+            <string>Show in Map</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_2">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+
+    <widget class="QWidget" name="tab_sources">
+    <attribute name="title">
+      <string>2. Sources</string>
+    </attribute>
+    <layout class="QVBoxLayout" name="verticalLayout_sources">
+      <item>
+      <widget class="QGroupBox" name="groupBox_main_select">
+        <property name="title">
+        <string>Source Type Selection</string>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_main">
+        <item>
+          <widget class="QLabel" name="label_type">
+          <property name="text">
+            <string>Select source geometry type:</string>
+          </property>
+          </widget>
+        </item>
+        <item>
+          <widget class="QComboBox" name="combo_source_type">
+          <item><property name="text"><string>Point Source (Stack)</string></property></item>
+          <item><property name="text"><string>Line Source (Road)</string></property></item>
+          <item><property name="text"><string>Area Source (Polygon)</string></property></item>
+          </widget>
+        </item>
+        </layout>
+      </widget>
+      </item>
+
+      <item>
+      <widget class="QStackedWidget" name="stackedWidget_sources">
+        <property name="currentIndex">
+        <number>0</number>
+        </property>
+        
+        <!-- POINT SOURCE PAGE -->
+        <widget class="QWidget" name="page_point">
+        <layout class="QFormLayout" name="form_point">
+          <item row="0" column="0"><widget class="QLabel"><property name="text"><string>Point layer:</string></property></widget></item>
+          <item row="0" column="1">
+          <layout class="QHBoxLayout" name="horizontalLayout_point">
+            <item><widget class="QComboBox" name="combo_point_layer"/></item>
+            <item><widget class="QPushButton" name="btn_refresh_point"><property name="text"><string>↻</string></property><property name="maximumSize"><size><width>30</width><height>30</height></size></property></widget></item>
+          </layout>
+          </item>
+          <item row="1" column="0"><widget class="QLabel"><property name="text"><string>ID attribute:</string></property></widget></item>
+          <item row="1" column="1"><widget class="QComboBox" name="combo_point_id"/></item>
+          <item row="2" column="0"><widget class="QLabel"><property name="text"><string>Emission (g/s):</string></property></widget></item>
+          <item row="2" column="1"><widget class="QComboBox" name="combo_point_emission"/></item>
+          <item row="3" column="0"><widget class="QLabel"><property name="text"><string>Stack height (m):</string></property></widget></item>
+          <item row="3" column="1"><widget class="QComboBox" name="combo_point_height"/></item>
+          <item row="4" column="0"><widget class="QLabel"><property name="text"><string>Gas volume (m³/s):</string></property></widget></item>
+          <item row="4" column="1"><widget class="QComboBox" name="combo_point_volume"/></item>
+          <item row="5" column="0"><widget class="QLabel"><property name="text"><string>Gas temp (°C):</string></property></widget></item>
+          <item row="5" column="1"><widget class="QComboBox" name="combo_point_temp"/></item>
+          <item row="6" column="0"><widget class="QLabel"><property name="text"><string>Diameter (m):</string></property></widget></item>
+          <item row="6" column="1"><widget class="QComboBox" name="combo_point_diam"/></item>
+          <item row="7" column="0"><widget class="QLabel"><property name="text"><string>Velocity (m/s):</string></property></widget></item>
+          <item row="7" column="1"><widget class="QComboBox" name="combo_point_vel"/></item>
+          <item row="8" column="0"><widget class="QLabel"><property name="text"><string>Year use (%):</string></property></widget></item>
+          <item row="8" column="1"><widget class="QComboBox" name="combo_point_year"/></item>
+          <item row="9" column="0"><widget class="QLabel"><property name="text"><string>Day use (h/day):</string></property></widget></item>
+          <item row="9" column="1"><widget class="QComboBox" name="combo_point_day"/></item>
+        </layout>
+        </widget>
+
+      <!-- LINE SOURCE PAGE -->
+      <widget class="QWidget" name="page_line">
+      <layout class="QFormLayout" name="form_line">
+        <item row="0" column="0">
+        <widget class="QLabel" name="label_line_layer">
+          <property name="text">
+          <string>Line layer:</string>
+          </property>
+        </widget>
+        </item>
+        <item row="0" column="1">
+        <layout class="QHBoxLayout" name="horizontalLayout_line">
+          <item>
+          <widget class="QComboBox" name="combo_line_layer"/>
+          </item>
+          <item>
+          <widget class="QPushButton" name="btn_refresh_line">
+            <property name="maximumSize">
+            <size>
+              <width>30</width>
+              <height>30</height>
+            </size>
+            </property>
+            <property name="text">
+            <string>↻</string>
+            </property>
+          </widget>
+          </item>
+        </layout>
+        </item>
+        <item row="1" column="0">
+        <widget class="QLabel" name="label_line_id">
+          <property name="text">
+          <string>ID attribute:</string>
+          </property>
+        </widget>
+        </item>
+        <item row="1" column="1">
+        <widget class="QComboBox" name="combo_line_id"/>
+        </item>
+        <item row="2" column="0">
+        <widget class="QLabel" name="label_line_emission">
+          <property name="text">
+          <string>Emission (g/s):</string>
+          </property>
+        </widget>
+        </item>
+        <item row="2" column="1">
+        <widget class="QComboBox" name="combo_line_emission"/>
+        </item>
+        <item row="3" column="0">
+        <widget class="QLabel" name="label_line_height">
+          <property name="text">
+          <string>Release height (m):</string>
+          </property>
+        </widget>
+        </item>
+        <item row="3" column="1">
+        <widget class="QComboBox" name="combo_line_height"/>
+        </item>
+        <item row="4" column="0">
+        <widget class="QLabel" name="label_line_year">
+          <property name="text">
+          <string>Year use (%):</string>
+          </property>
+        </widget>
+        </item>
+        <item row="4" column="1">
+        <widget class="QComboBox" name="combo_line_year"/>
+        </item>
+        <item row="5" column="0">
+        <widget class="QLabel" name="label_line_day">
+          <property name="text">
+          <string>Day use (h/day):</string>
+          </property>
+        </widget>
+        </item>
+        <item row="5" column="1">
+        <widget class="QComboBox" name="combo_line_day"/>
+        </item>
+        <item row="6" column="0">
+        <widget class="QLabel" name="label_line_spacing">
+          <property name="text">
+          <string>Point spacing (m):</string>
+          </property>
+        </widget>
+        </item>
+        <item row="6" column="1">
+        <widget class="QSpinBox" name="spin_line_spacing">
+          <property name="minimum">
+          <number>1</number>
+          </property>
+          <property name="maximum">
+          <number>100000</number>
+          </property>
+          <property name="value">
+          <number>125</number>
+          </property>
+        </widget>
+        </item>
+      </layout>
+      </widget>
+
+      <!-- AREA SOURCE PAGE -->
+      <widget class="QWidget" name="page_area">
+      <layout class="QFormLayout" name="form_area">
+        <item row="0" column="0">
+        <widget class="QLabel" name="label_area_layer">
+          <property name="text">
+          <string>Polygon layer:</string>
+          </property>
+        </widget>
+        </item>
+        <item row="0" column="1">
+        <layout class="QHBoxLayout" name="horizontalLayout_area">
+          <item>
+          <widget class="QComboBox" name="combo_area_layer"/>
+          </item>
+          <item>
+          <widget class="QPushButton" name="btn_refresh_area">
+            <property name="maximumSize">
+            <size>
+              <width>30</width>
+              <height>30</height>
+            </size>
+            </property>
+            <property name="text">
+            <string>↻</string>
+            </property>
+          </widget>
+          </item>
+        </layout>
+        </item>
+        <item row="1" column="0">
+        <widget class="QLabel" name="label_area_id">
+          <property name="text">
+          <string>ID attribute:</string>
+          </property>
+        </widget>
+        </item>
+        <item row="1" column="1">
+        <widget class="QComboBox" name="combo_area_id"/>
+        </item>
+        <item row="2" column="0">
+        <widget class="QLabel" name="label_area_emission">
+          <property name="text">
+          <string>Emission (g/s):</string>
+          </property>
+        </widget>
+        </item>
+        <item row="2" column="1">
+        <widget class="QComboBox" name="combo_area_emission"/>
+        </item>
+        <item row="3" column="0">
+        <widget class="QLabel" name="label_area_height">
+          <property name="text">
+          <string>Release height (m):</string>
+          </property>
+        </widget>
+        </item>
+        <item row="3" column="1">
+        <widget class="QComboBox" name="combo_area_height"/>
+        </item>
+        <item row="4" column="0">
+        <widget class="QLabel" name="label_area_year">
+          <property name="text">
+          <string>Year use (%):</string>
+          </property>
+        </widget>
+        </item>
+        <item row="4" column="1">
+        <widget class="QComboBox" name="combo_area_year"/>
+        </item>
+        <item row="5" column="0">
+        <widget class="QLabel" name="label_area_day">
+          <property name="text">
+          <string>Day use (h/day):</string>
+          </property>
+        </widget>
+        </item>
+        <item row="5" column="1">
+        <widget class="QComboBox" name="combo_area_day"/>
+        </item>
+        <item row="6" column="0">
+        <widget class="QLabel" name="label_area_spacing">
+          <property name="text">
+          <string>Point spacing (m):</string>
+          </property>
+        </widget>
+        </item>
+        <item row="6" column="1">
+        <widget class="QSpinBox" name="spin_area_spacing">
+          <property name="minimum">
+          <number>1</number>
+          </property>
+          <property name="maximum">
+          <number>100000</number>
+          </property>
+          <property name="value">
+          <number>250</number>
+          </property>
+        </widget>
+        </item>
+      </layout>
+      </widget>
+      </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btn_test_sources">
+        <property name="text">
+         <string>Test Sources</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+
+    <widget class="QWidget" name="tab_receptors">
+      <attribute name="title">
+        <string>3. Receptors</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_5">
+        <item>
+        <widget class="QGroupBox" name="groupBox_import">
+          <property name="title">
+          <string>Import receptors from layer</string>
+          </property>
+          <property name="checkable">
+          <bool>true</bool>
+          </property>
+          <property name="checked">
+          <bool>false</bool>
+          </property>
+          <layout class="QFormLayout" name="formLayout_import">
+          <item row="0" column="0">
+            <widget class="QLabel" name="label_layer">
+            <property name="text">
+              <string>Select layer:</string>
+            </property>
+            </widget>
+          </item>
+          <item row="0" column="1">
+            <layout class="QHBoxLayout" name="horizontalLayout_import">
+            <item>
+              <widget class="QComboBox" name="combo_import_layer"/>
+            </item>
+            <item>
+              <widget class="QPushButton" name="btn_refresh_import">
+              <property name="text">
+                <string>↻</string>
+              </property>
+              <property name="maximumSize">
+                <size>
+                <width>30</width>
+                <height>30</height>
+                </size>
+              </property>
+              </widget>
+            </item>
+            </layout>
+          </item>
+          <item row="1" column="0">
+            <widget class="QLabel" name="label_import_height">
+            <property name="text">
+              <string>Height above terrain (m):</string>
+            </property>
+            </widget>
+          </item>
+          <item row="1" column="1">
+            <widget class="QSpinBox" name="spin_import_height">
+            <property name="minimum">
+              <number>0</number>
+            </property>
+            <property name="maximum">
+              <number>9999999</number>
+            </property>
+            </widget>
+          </item>
+          </layout>
+        </widget>
+        </item>
+        
+        <item>
+        <widget class="QGroupBox" name="groupBox_regular">
+          <property name="title">
+          <string>Generate regular receptors</string>
+          </property>
+          <property name="checkable">
+          <bool>true</bool>
+          </property>
+          <property name="checked">
+          <bool>false</bool>
+          </property>
+          <layout class="QFormLayout" name="formLayout_regular">
+          <item row="0" column="0">
+            <widget class="QLabel" name="label_extent_layer">
+            <property name="text">
+              <string>Extent according to layer:</string>
+            </property>
+            </widget>
+          </item>
+          <item row="0" column="1">
+            <layout class="QHBoxLayout" name="horizontalLayout_regular">
+            <item>
+              <widget class="QComboBox" name="combo_extent_layer"/>
+            </item>
+            <item>
+              <widget class="QPushButton" name="btn_refresh_regular">
+              <property name="text">
+                <string>↻</string>
+              </property>
+              <property name="maximumSize">
+                <size>
+                <width>30</width>
+                <height>30</height>
+                </size>
+              </property>
+              </widget>
+            </item>
+            </layout>
+          </item>
+          <item row="1" column="0">
+            <widget class="QLabel" name="label_spacing">
+            <property name="text">
+              <string>Point spacing (m):</string>
+            </property>
+            </widget>
+          </item>
+          <item row="1" column="1">
+            <widget class="QSpinBox" name="spin_spacing">
+            <property name="minimum">
+              <number>1</number>
+            </property>
+            <property name="maximum">
+              <number>99999999</number>
+            </property>
+            </widget>
+          </item>
+          <item row="2" column="0">
+            <widget class="QLabel" name="label_regular_height">
+            <property name="text">
+              <string>Height above terrain (m):</string>
+            </property>
+            </widget>
+          </item>
+          <item row="2" column="1">
+            <widget class="QSpinBox" name="spin_regular_height">
+            <property name="minimum">
+              <number>0</number>
+            </property>
+            <property name="maximum">
+              <number>99999999</number>
+            </property>
+            </widget>
+          </item>
+          </layout>
+        </widget>
+        </item>
+        
+        <item>
+        <widget class="QGroupBox" name="groupBox_around">
+          <property name="title">
+          <string>Generate receptors around features</string>
+          </property>
+          <property name="checkable">
+          <bool>true</bool>
+          </property>
+          <property name="checked">
+          <bool>false</bool>
+          </property>
+          <layout class="QFormLayout" name="formLayout_around">
+          <item row="0" column="0">
+            <widget class="QLabel" name="label_features_layer">
+            <property name="text">
+              <string>Select layer with features:</string>
+            </property>
+            </widget>
+          </item>
+          <item row="0" column="1">
+            <layout class="QHBoxLayout" name="horizontalLayout_around">
+            <item>
+              <widget class="QComboBox" name="combo_features_layer"/>
+            </item>
+            <item>
+              <widget class="QPushButton" name="btn_refresh_around">
+              <property name="text">
+                <string>↻</string>
+              </property>
+              <property name="maximumSize">
+                <size>
+                <width>30</width>
+                <height>30</height>
+                </size>
+              </property>
+              </widget>
+            </item>
+            </layout>
+          </item>
+          <item row="1" column="0">
+            <widget class="QLabel" name="label_min_distance">
+            <property name="text">
+              <string>Min distance from features (m):</string>
+            </property>
+            </widget>
+          </item>
+          <item row="1" column="1">
+            <widget class="QSpinBox" name="spin_min_distance">
+            <property name="minimum">
+              <number>0</number>
+            </property>
+            <property name="maximum">
+              <number>99999999</number>
+            </property>
+            </widget>
+          </item>
+          <item row="2" column="0">
+            <widget class="QLabel" name="label_max_distance">
+            <property name="text">
+              <string>Max distance from features (m):</string>
+            </property>
+            </widget>
+          </item>
+          <item row="2" column="1">
+            <widget class="QSpinBox" name="spin_max_distance">
+            <property name="minimum">
+              <number>0</number>
+            </property>
+            <property name="maximum">
+              <number>99999999</number>
+            </property>
+            </widget>
+          </item>
+          <item row="3" column="0">
+            <widget class="QLabel" name="label_around_spacing">
+            <property name="text">
+              <string>Point spacing (m):</string>
+            </property>
+            </widget>
+          </item>
+          <item row="3" column="1">
+            <widget class="QSpinBox" name="spin_around_spacing">
+            <property name="minimum">
+              <number>1</number>
+            </property>
+            <property name="maximum">
+              <number>99999999</number>
+            </property>
+            </widget>
+          </item>
+          <item row="4" column="0">
+            <widget class="QLabel" name="label_around_height">
+            <property name="text">
+              <string>Height above terrain (m):</string>
+            </property>
+            </widget>
+          </item>
+          <item row="4" column="1">
+            <widget class="QSpinBox" name="spin_around_height">
+            <property name="minimum">
+              <number>0</number>
+            </property>
+            <property name="maximum">
+              <number>99999999</number>
+            </property>
+            </widget>
+          </item>
+          </layout>
+        </widget>
+        </item>
+        
+        <!-- Generate buttons -->
+        <item>
+        <widget class="QPushButton" name="btn_generate_regular">
+          <property name="text">
+          <string>Generate regular receptor grid</string>
+          </property>
+        </widget>
+        </item>
+        
+        <item>
+        <widget class="QPushButton" name="btn_generate_around">
+          <property name="text">
+          <string>Generate receptors around features</string>
+          </property>
+        </widget>
+        </item>
+        
+        <!-- Test button -->
+        <item>
+        <widget class="QPushButton" name="btn_test_receptors">
+          <property name="text">
+          <string>Test Receptor Data</string>
+          </property>
+        </widget>
+        </item>
+        
+        <item>
+        <spacer name="verticalSpacer_3">
+          <property name="orientation">
+          <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+          <size>
+            <width>20</width>
+            <height>40</height>
+          </size>
+          </property>
+        </spacer>
+        </item>
+      </layout>
+      </widget>
+     <widget class="QWidget" name="tab_wind">
+      <attribute name="title">
+       <string>4. Wind Data</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_6">
+       <item>
+        <widget class="QGroupBox" name="groupBox_5">
+         <property name="title">
+          <string>Wind Data File</string>
+         </property>
+         <layout class="QFormLayout" name="formLayout_4">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_9">
+            <property name="text">
+             <string>Wind data file:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <layout class="QHBoxLayout" name="horizontalLayout_4">
+            <item>
+             <widget class="QLabel" name="wind_file_label">
+              <property name="text">
+               <string>No file selected</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btn_browse_wind">
+              <property name="text">
+               <string>Browse...</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btn_analyze_wind">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="text">
+          <string>🔍 Analyze Wind Rose</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox_6">
+         <property name="title">
+          <string>Analysis Results</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_7">
+          <item>
+           <widget class="QLabel" name="label_11">
+            <property name="text">
+             <string>Summary:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QTextEdit" name="wind_results_text">
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+            <property name="placeholderText">
+             <string>Analysis results will appear here...</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox_7">
+         <property name="title">
+          <string>Wind Visualization</string>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_5">
+          <item>
+           <widget class="QWidget" name="widget" native="true">
+            <layout class="QVBoxLayout" name="verticalLayout_8">
+             <item>
+              <widget class="QLabel" name="label_12">
+               <property name="text">
+                <string>📊 Wind Direction Frequencies</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="wind_bar_plot_label">
+               <property name="text">
+                    <string>Bar plot will appear here after analysis</string>
+                  </property>
+                  <property name="maximumSize">
+                    <size>
+                    <width>400</width>
+                    <height>300</height>
+                    </size>
+                  </property>
+                  <property name="scaledContents">
+                    <bool>true</bool>
+                  </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QWidget" name="widget_2" native="true">
+            <layout class="QVBoxLayout" name="verticalLayout_9">
+             <item>
+              <widget class="QLabel" name="label_13">
+               <property name="text">
+                <string>🌹 Classic Wind Rose</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="wind_rose_plot_label">
+                <property name="text">
+                  <string>Wind rose will appear here after analysis</string>
+                </property>
+                <property name="maximumSize">
+                  <size>
+                  <width>400</width>
+                  <height>300</height>
+                  </size>
+                </property>
+                <property name="scaledContents">
+                  <bool>true</bool>
+                </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_6">
+         <item>
+          <widget class="QPushButton" name="btn_export_csv">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="text">
+            <string>📊 Export to CSV</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btn_export_plot">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="text">
+            <string>🖼️ Export Plot</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btn_clear_results">
+           <property name="text">
+            <string>🗑️ Clear Results</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_3">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_4">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_calculation">
+        <attribute name="title">
+          <string>5. Calculation</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_10">
+          <item>
+          <widget class="QGroupBox" name="groupBox_8">
+            <property name="title">
+            <string>Model Settings</string>
+            </property>
+            <layout class="QFormLayout" name="formLayout_5">
+            <item row="0" column="0">
+              <widget class="QLabel" name="label_14">
+              <property name="text">
+                <string>Concentration type:</string>
+              </property>
+              </widget>
+            </item>
+            <item row="0" column="1">
+              <widget class="QComboBox" name="combo_concentration_type">
+              <item>
+                <property name="text">
+                <string>Maximum short-time concentration</string>
+                </property>
+              </item>
+              <item>
+                <property name="text">
+                <string>Mean (year) concentration</string>
+                </property>
+              </item>
+              <item>
+                <property name="text">
+                <string>Time of limit exceeding</string>
+                </property>
+              </item>
+              </widget>
+            </item>
+            </layout>
+          </widget>
+          </item>
+          <item>
+          <widget class="QLabel" name="label_17">
+            <property name="text">
+            <string>Calculation log:</string>
+            </property>
+          </widget>
+          </item>
+          <item>
+          <widget class="QTextEdit" name="text_log">
+            <property name="readOnly">
+            <bool>true</bool>
+            </property>
+            <property name="placeholderText">
+            <string>Calculation log will appear here...</string>
+            </property>
+          </widget>
+          </item>
+          <item>
+          <widget class="QProgressBar" name="progress_bar">
+            <property name="value">
+            <number>0</number>
+            </property>
+          </widget>
+          </item>
+          <item>
+          <widget class="QPushButton" name="big_calc_button">
+            <property name="enabled">
+            <bool>false</bool>
+            </property>
+            <property name="text">
+            <string>START CALCULATION</string>
+            </property>
+          </widget>
+          </item>
+          <item>
+          <widget class="QPushButton" name="btn_abort">
+            <property name="text">
+            <string>ABORT CALCULATION</string>
+            </property>
+            <property name="enabled">
+            <bool>false</bool>
+            </property>
+          </widget>
+          </item>
+          <item>
+          <spacer name="verticalSpacer_5">
+            <property name="orientation">
+            <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+            <size>
+              <width>20</width>
+              <height>40</height>
+            </size>
+            </property>
+          </spacer>
+          </item>
+        </layout>
+        </widget>
+     <widget class="QWidget" name="tab_help">
+      <attribute name="title">
+       <string>Help</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_11">
+       <item>
+        <widget class="QLabel" name="label_18">
+         <property name="text">
+          <string>&lt;h1&gt;OpenSymos Help&lt;/h1&gt;</string>
+         </property>
+         <property name="textFormat">
+          <enum>Qt::RichText</enum>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_19">
+         <property name="text">
+          <string>&lt;h2&gt;Quick Start Guide&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;b&gt;Load your data&lt;/b&gt; into QGIS project
+  &lt;ul&gt;
+    &lt;li&gt;Terrain: Raster layer (DEM/DTM)&lt;/li&gt;
+    &lt;li&gt;Sources: Point/Polygon layer with emissions&lt;/li&gt;
+    &lt;li&gt;Receptors: Point layer for calculation points&lt;/li&gt;
+    &lt;li&gt;Wind: XML/TXT file with wind rose data&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;Configure each tab&lt;/b&gt; from left to right&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;Validate data&lt;/b&gt; using the &quot;Validate All&quot; button&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;Go to Calculation tab&lt;/b&gt; to run the model there&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;View results&lt;/b&gt; in the Results tab (opens after calculation)&lt;/li&gt;
+&lt;/ol&gt;</string>
+         </property>
+         <property name="textFormat">
+          <enum>Qt::RichText</enum>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_20">
+         <property name="text">
+          <string>&lt;h2&gt;More Resources&lt;/h2&gt;
+&lt;p&gt;• &lt;b&gt;Full documentation:&lt;/b&gt; &lt;a href=&quot;https://github.com/ruz76/qgis_opensymos_3&quot;&gt;GitHub repository&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;• &lt;b&gt;Settings:&lt;/b&gt; Plugins → OpenSymos → Settings&lt;/p&gt;
+&lt;p&gt;• &lt;b&gt;About plugin:&lt;/b&gt; Plugins → OpenSymos → About&lt;/p&gt;</string>
+         </property>
+         <property name="textFormat">
+          <enum>Qt::RichText</enum>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+         <property name="openExternalLinks">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_6">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+   <item>
+    <widget class="QFrame" name="frame_status">
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QLabel" name="lbl_status">
+        <property name="text">
+         <string>Status: Waiting for data</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btn_validate">
+        <property name="text">
+         <string>Validate All</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btn_calculate">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="text">
+         <string>Go to Calculation</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

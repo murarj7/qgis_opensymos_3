@@ -1,0 +1,16 @@
+[general]
+name=OpenSymos2026
+qgisMinimumVersion=3.4
+description=Calculates pollutants concentration according to SYMOS methodology
+version=1.0
+author=Juraj Murar, Jan Ruzicka, Katerina Ruzickova, Radek Furmanek, Ondrej Kolodziej (based on code from Karel Psota)
+email=jan.ruzicka.vsb@gmail.com
+
+[about]
+homepage=https://github.com/vaserepo
+tracker=https://github.com/vaserepo/issues
+repository=https://github.com/vaserepo
+icon=icon.png
+
+[changelog]
+1.0=First release
