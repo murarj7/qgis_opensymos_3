@@ -1530,12 +1530,26 @@ class MainDialog(QDialog):
 
                 elif method == "regular":
                     layer = QgsProject.instance().mapLayer(receptor_config["regular"]["layer_id"])
+                    terrain_layer_id = self.combo_terrain.currentData()
+
                     if layer and layer.isValid():
                         crs = layer.crs()
                         if crs.isValid() and crs.authid() != "":
                             if crs.mapUnits() == QgsUnitTypes.DistanceMeters:
                                 used_crs["Receptors (Regular)"] = crs.authid()
                                 messages.append(f"✓ Receptors (Regular): Extent layer ({crs.authid()})")
+
+                                if self.combo_terrain.currentIndex() <= 0:
+                                    messages.append("✗ Receptors (Regular): No DEM selected in Terrain tab")
+                                    receptors_valid = False
+                                    all_valid = False
+                                elif receptor_config["regular"]["layer_id"] != terrain_layer_id:
+                                    messages.append(
+                                        "✗ Receptors (Regular): selected layer must be identical "
+                                        "to the DEM selected in Terrain tab"
+                                    )
+                                    receptors_valid = False
+                                    all_valid = False
                             else:
                                 messages.append(f"✗ Receptors (Regular): NON-METRIC CRS ({crs.authid()})")
                                 receptors_valid = False
@@ -1672,6 +1686,10 @@ class MainDialog(QDialog):
                     else:
                         crs = layer.crs()
                         if not (crs.isValid() and crs.authid() != "" and crs.mapUnits() == QgsUnitTypes.DistanceMeters):
+                            all_valid = False
+                        elif self.combo_terrain.currentIndex() <= 0:
+                            all_valid = False
+                        elif receptor_config["regular"]["layer_id"] != self.combo_terrain.currentData():
                             all_valid = False
 
                 elif method == "around":
@@ -2252,6 +2270,16 @@ class MainDialog(QDialog):
 
             if terrain is None or dem_layer is None:
                 self.text_log.append("❌ Cannot generate regular grid receptors without DEM")
+            elif extent_layer_id != self.combo_terrain.currentData():
+                msg = (
+                    "Regular receptor generation requires the same DEM in both tabs.\n\n"
+                    "The layer selected in Receptors → Regular grid must be identical "
+                    "to the DEM selected in Terrain."
+                )
+                self.text_log.append(f"❌ {msg}")
+                QMessageBox.critical(self, "DEM mismatch", msg)
+                self.calculation_finished(None)
+                return
             else:
                 generator = RegularReceptorGenerator()
                 generated_layer = generator.generate(
