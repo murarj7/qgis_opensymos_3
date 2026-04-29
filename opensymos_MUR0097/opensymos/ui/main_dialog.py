@@ -7,7 +7,7 @@ if plugin_dir not in sys.path:
     sys.path.insert(0, plugin_dir)
 
 from qgis.PyQt.QtWidgets import QDialog, QMessageBox, QApplication, QFileDialog
-from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtCore import Qt, QVariant
 from qgis.PyQt.QtGui import QPixmap
 from qgis.PyQt import uic
 from qgis.core import (
@@ -237,13 +237,29 @@ class MainDialog(QDialog):
             )
             combobox.addItem("Error loading layers")
 
+    def _get_numeric_field_names(self, layer):
+        """Return only integer/float-like field names from a layer."""
+        numeric_types = {
+            QVariant.Int,
+            QVariant.UInt,
+            QVariant.LongLong,
+            QVariant.ULongLong,
+            QVariant.Double,
+        }
+
+        return [
+            field.name()
+            for field in layer.fields()
+            if field.type() in numeric_types
+        ]
+
     def update_source_attributes(self, source_type):
         """Update attribute comboboxes based on selected layer."""
         mapping = {
             "point": {
                 "layer_combo": self.combo_point_layer,
-                "attr_combos": [
-                    self.combo_point_id,
+                "id_combo": self.combo_point_id,
+                "numeric_combos": [
                     self.combo_point_emission,
                     self.combo_point_height,
                     self.combo_point_volume,
@@ -256,8 +272,8 @@ class MainDialog(QDialog):
             },
             "line": {
                 "layer_combo": self.combo_line_layer,
-                "attr_combos": [
-                    self.combo_line_id,
+                "id_combo": self.combo_line_id,
+                "numeric_combos": [
                     self.combo_line_emission,
                     self.combo_line_height,
                     self.combo_line_year,
@@ -266,8 +282,8 @@ class MainDialog(QDialog):
             },
             "area": {
                 "layer_combo": self.combo_area_layer,
-                "attr_combos": [
-                    self.combo_area_id,
+                "id_combo": self.combo_area_id,
+                "numeric_combos": [
                     self.combo_area_emission,
                     self.combo_area_height,
                     self.combo_area_year,
@@ -280,11 +296,20 @@ class MainDialog(QDialog):
         layer_id = data["layer_combo"].currentData()
         layer = QgsProject.instance().mapLayer(layer_id)
 
-        for combo in data["attr_combos"]:
+        # Clear all combos first
+        data["id_combo"].clear()
+        for combo in data["numeric_combos"]:
             combo.clear()
-            if layer:
-                fields = [field.name() for field in layer.fields()]
-                combo.addItems(fields)
+
+        if layer:
+            all_fields = [field.name() for field in layer.fields()]
+            numeric_fields = self._get_numeric_field_names(layer)
+
+            data["id_combo"].addItems(numeric_fields)  # ID field must be numeric for proper indexing
+
+            # All source parameter fields: numeric only
+            for combo in data["numeric_combos"]:
+                combo.addItems(numeric_fields)
 
     def get_selected_source_layers(self):
         """Return all currently selected valid source layers."""
