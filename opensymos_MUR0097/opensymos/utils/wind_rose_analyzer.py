@@ -1,5 +1,4 @@
 import os
-import xml.etree.ElementTree as ET
 from io import BytesIO
 
 import matplotlib
@@ -9,6 +8,7 @@ print(f"[ANALYZER] Matplotlib backend set to: {matplotlib.get_backend()}")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from .xml_parser import parse_wind_rose_xml
 
 
 DIRECTION_CODES = ["s", "sv", "v", "jv", "j", "jz", "z", "sz"]
@@ -55,87 +55,6 @@ REPRESENTATIVE_SPEED_LABELS = [
 DIRECTION_ANGLES_DEG = np.array([0, 45, 90, 135, 180, 225, 270, 315], dtype=float)
 
 
-# -------------------------------------------------------------------
-# 1. XML PARSING
-# -------------------------------------------------------------------
-def parse_wind_rose_xml(xml_path):
-    """
-    Parse a SYMOS wind-rose XML file into a DataFrame.
-
-    Expected XML structure:
-    - trida_stability/@id
-    - bezvetri/@value
-    - rychlost/@value
-    - cetnosti/@s, @sv, @v, @jv, @j, @jz, @z, @sz
-
-    Returns
-    -------
-    pandas.DataFrame
-        Columns:
-        - stability
-        - speed
-        - direction
-        - frequency
-        - calm
-    """
-    tree = ET.parse(xml_path)
-    root = tree.getroot()
-
-    rows = []
-
-    for stability_elem in root.findall("trida_stability"):
-        stability_id = stability_elem.get("id")
-        if stability_id is None:
-            raise ValueError("Missing stability class id in XML.")
-
-        calm_elem = stability_elem.find("bezvetri")
-        if calm_elem is None:
-            raise ValueError(f"Missing 'bezvetri' element for stability class {stability_id}.")
-
-        calm_value = calm_elem.get("value")
-        if calm_value is None:
-            raise ValueError(f"Missing calm value for stability class {stability_id}.")
-
-        calm_frequency = float(calm_value)
-
-        for speed_elem in stability_elem.findall("rychlost"):
-            speed_value = speed_elem.get("value")
-            if speed_value is None:
-                raise ValueError(f"Missing speed value for stability class {stability_id}.")
-
-            representative_speed = float(speed_value)
-            direction_frequencies = speed_elem.find("cetnosti")
-            if direction_frequencies is None:
-                raise ValueError(
-                    f"Missing 'cetnosti' element for stability class {stability_id}, "
-                    f"speed {representative_speed}."
-                )
-
-            for direction_code in DIRECTION_CODES:
-                frequency_value = direction_frequencies.get(direction_code)
-                if frequency_value is None:
-                    raise ValueError(
-                        f"Missing frequency for direction '{direction_code}', "
-                        f"stability class {stability_id}, speed {representative_speed}."
-                    )
-
-                rows.append(
-                    {
-                        "stability": str(stability_id),
-                        "speed": representative_speed,
-                        "direction": direction_code,
-                        "frequency": float(frequency_value),
-                        "calm": calm_frequency,
-                    }
-                )
-
-    df = pd.DataFrame(rows)
-    if df.empty:
-        raise ValueError("Parsed XML produced an empty DataFrame.")
-
-    return df
-
-
 def get_direction_degrees(direction_code):
     """
     Convert a direction code to degrees.
@@ -148,6 +67,70 @@ def get_direction_name(direction_code):
     Convert a direction code to a full English direction name.
     """
     return DIRECTION_TO_NAME.get(direction_code, direction_code)
+
+
+def get_total_calm_frequency(df):
+    """
+    Return total calm frequency across all stability classes.
+
+    Calm is repeated in every row of a given stability class, so only the first
+    value per class must be used.
+    """
+    if "calm" not in df.columns or df.empty:
+        return 0.0
+
+    return float(df.groupby(df["stability"].astype(str))["calm"].first().sum())
+
+
+def redistribute_calm_to_first_speed_class(df):
+    """
+    Replicate original plugin behaviour for analysis/plotting:
+    calm frequency is redistributed into the first speed class (1.7 m/s)
+    according to directional weights of that class.
+
+    Returns a NEW DataFrame.
+    Works correctly both for zero calm and non-zero calm.
+    """
+    if df.empty or "calm" not in df.columns:
+        return df.copy()
+
+    redistributed = df.copy()
+    redistributed["stability"] = redistributed["stability"].astype(str)
+    redistributed["speed"] = pd.to_numeric(redistributed["speed"], errors="raise")
+    redistributed["frequency"] = pd.to_numeric(redistributed["frequency"], errors="raise")
+    redistributed["calm"] = pd.to_numeric(redistributed["calm"], errors="raise")
+
+    for stability_class, group in redistributed.groupby("stability"):
+        calm_value = float(group["calm"].iloc[0]) if not group.empty else 0.0
+
+        # Nothing to do for zero calm
+        if calm_value == 0.0:
+            continue
+
+        mask_first_speed = (
+            (redistributed["stability"] == stability_class)
+            & np.isclose(redistributed["speed"], 1.7, atol=1e-9)
+        )
+        first_speed_df = redistributed.loc[mask_first_speed]
+
+        if first_speed_df.empty:
+            continue
+
+        row_sum = float(first_speed_df["frequency"].sum())
+
+        if row_sum > 0.0:
+            for idx in first_speed_df.index:
+                value = float(redistributed.at[idx, "frequency"])
+                weight = value / row_sum
+                redistributed.at[idx, "frequency"] = value + weight * calm_value
+        else:
+            # Robust fallback: if class 1.7 has no directional frequencies,
+            # distribute calm evenly across 8 directions.
+            equal_share = calm_value / 8.0
+            for idx in first_speed_df.index:
+                redistributed.at[idx, "frequency"] = equal_share
+
+    return redistributed
 
 
 # -------------------------------------------------------------------
@@ -226,8 +209,14 @@ def calculate_class_statistics(df):
 def calculate_statistics(df):
     """
     Calculate overall wind-rose statistics.
+
+    Direction-based statistics are calculated from a calculation-consistent
+    DataFrame where calm is redistributed into the 1.7 m/s class.
+    Total calm frequency is kept from the original raw XML data.
     """
-    direction_totals = calculate_direction_totals(df)
+    df_plot = redistribute_calm_to_first_speed_class(df)
+
+    direction_totals = calculate_direction_totals(df_plot)
 
     if direction_totals:
         dominant_direction_code = max(direction_totals, key=direction_totals.get)
@@ -238,7 +227,7 @@ def calculate_statistics(df):
         dominant_direction_name = "N/A"
         dominant_value = 0.0
 
-    class_stats = calculate_class_statistics(df)
+    class_stats = calculate_class_statistics(df_plot)
     available_speed_classes = sorted({float(value) for value in df["speed"].unique()})
     total_calm_frequency = float(
         df.groupby(df["stability"].astype(str))["calm"].first().sum()
@@ -263,11 +252,17 @@ def calculate_statistics(df):
 # -------------------------------------------------------------------
 def create_simple_direction_plot(df, figsize=(10, 6)):
     """
-    Create a standard bar plot of total wind direction frequencies.
+    Create a bar plot of direction frequencies.
+
+    Calm is redistributed into the 1.7 m/s class exactly like in the original
+    plugin calculation, but the original calm total is also shown explicitly.
     """
+    df_plot = redistribute_calm_to_first_speed_class(df)
+    calm_total = get_total_calm_frequency(df)
+
     direction_totals = {
         DIRECTION_TO_SHORT_NAME[direction_code]: float(
-            df.loc[df["direction"] == direction_code, "frequency"].sum()
+            df_plot.loc[df_plot["direction"] == direction_code, "frequency"].sum()
         )
         for direction_code in DIRECTION_CODES
     }
@@ -304,9 +299,26 @@ def create_simple_direction_plot(df, figsize=(10, 6)):
         alpha=0.5,
         label=f"Average: {average_value:.1f}%",
     )
-    ax.legend()
 
-    fig.tight_layout()
+    calm_note = (
+        f"Calm total: {calm_total:.2f}%\n"
+        "Calm redistributed to 1.7 m/s class"
+        if calm_total > 0.0
+        else "Calm total: 0.00%"
+    )
+
+    ax.legend(loc="upper left", bbox_to_anchor=(1.02, 1.0), borderaxespad=0.0)
+
+    fig.text(
+        0.624, 0.87,
+        calm_note,
+        ha="left",
+        va="top",
+        fontsize=9,
+        bbox=dict(boxstyle="round", facecolor="white", alpha=0.85, edgecolor="gray"),
+    )
+
+    fig.tight_layout(rect=[0, 0.02, 0.80, 1.0])
     return fig
 
 
@@ -314,9 +326,8 @@ def create_matplotlib_polar_wind_rose(df, figsize=(8, 8)):
     """
     Create a SYMOS-consistent polar wind rose.
 
-    The XML contains only 3 representative speed-class values (1.7, 5.0,
-    11.0 m/s). The plot therefore uses these 3 classes directly instead of
-    inventing intermediate bins.
+    Calm is redistributed into the 1.7 m/s class like in the original plugin.
+    The original calm total is shown as an annotation.
     """
     required_columns = {"direction_deg", "speed", "frequency"}
     missing = required_columns - set(df.columns)
@@ -325,6 +336,16 @@ def create_matplotlib_polar_wind_rose(df, figsize=(8, 8)):
 
     if df.empty:
         raise ValueError("Input DataFrame is empty.")
+
+    df_plot = redistribute_calm_to_first_speed_class(df)
+    calm_total = get_total_calm_frequency(df)
+
+    calm_note = (
+        f"Calm total: {calm_total:.2f}%\n"
+        "Redistributed to 1.7 m/s class"
+        if calm_total > 0.0
+        else "Calm total: 0.00%"
+    )
 
     theta = np.deg2rad(DIRECTION_ANGLES_DEG)
     width = np.deg2rad(45.0)
@@ -341,8 +362,8 @@ def create_matplotlib_polar_wind_rose(df, figsize=(8, 8)):
         REPRESENTATIVE_SPEED_CLASSES,
         REPRESENTATIVE_SPEED_LABELS,
     ):
-        speed_mask = np.isclose(df["speed"].to_numpy(dtype=float), representative_speed, atol=1e-9)
-        speed_df = df.loc[speed_mask]
+        speed_mask = np.isclose(df_plot["speed"].to_numpy(dtype=float), representative_speed, atol=1e-9)
+        speed_df = df_plot.loc[speed_mask]
 
         values = []
         for angle_deg in DIRECTION_ANGLES_DEG:
@@ -365,8 +386,23 @@ def create_matplotlib_polar_wind_rose(df, figsize=(8, 8)):
 
     ax.set_title("Wind Rose", fontsize=14, fontweight="bold", pad=20)
     ax.set_thetagrids(DIRECTION_ANGLES_DEG, labels=["N", "NE", "E", "SE", "S", "SW", "W", "NW"])
-    ax.legend(title="Representative speed class", loc="lower left", bbox_to_anchor=(0.0, 0.0))
+    ax.legend(
+        title="Representative speed class",
+        loc="upper left",
+        bbox_to_anchor=(1.08, 1.0),
+        borderaxespad=0.0,
+    )
 
+    fig.text(
+        0.51, 0.58,
+        calm_note,
+        ha="left",
+        va="top",
+        fontsize=9,
+        bbox=dict(boxstyle="round", facecolor="white", alpha=0.85, edgecolor="gray"),
+    )
+
+    fig.tight_layout(rect=[0, 0.02, 0.80, 1.0])
     return fig
 
 
@@ -427,6 +463,13 @@ def generate_text_report(stats, rose_plot_status=None, rose_plot_message=""):
     for direction_code, total in stats["direction_totals"].items():
         direction_name = DIRECTION_TO_NAME.get(direction_code, direction_code)
         report_lines.append(f"  {direction_name:<12} : {total:6.2f}%")
+
+    report_lines.append("")
+    report_lines.append(
+        "Note: For calculation-consistent visualization, calm frequency is "
+        "redistributed into the 1.7 m/s class according to directional weights "
+        "of that class, as in the original plugin."
+    )
 
     report_lines.append("")
     report_lines.append("Statistics by Stability Class:")

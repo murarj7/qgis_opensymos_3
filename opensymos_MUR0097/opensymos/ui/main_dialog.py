@@ -1819,12 +1819,22 @@ class MainDialog(QDialog):
                 return
 
         except Exception as e:
-            self.text_log.append(f"❌ Error loading wind rose: {str(e)}")
-            QMessageBox.critical(
-                self,
-                "Wind Rose Error",
-                f"Failed to load wind rose data:\n{str(e)}"
-            )
+            error_text = str(e)
+
+            if "Invalid wind rose format" in error_text:
+                user_msg = (
+                    "Invalid wind rose format.\n\n"
+                    "Expected XML structure with elements:\n"
+                    "• <trida_stability id=\"...\">\n"
+                    "• <bezvetri value=\"...\" />\n"
+                    "• <rychlost value=\"...\">\n"
+                    "• <cetnosti s=\"...\" sv=\"...\" v=\"...\" jv=\"...\" j=\"...\" jz=\"...\" z=\"...\" sz=\"...\" />"
+                )
+            else:
+                user_msg = f"Failed to load wind rose data:\n{error_text}"
+
+            self.text_log.append(f"❌ Error loading wind rose: {error_text}")
+            QMessageBox.critical(self, "Wind Rose Error", user_msg)
             self.calculation_finished(None)
             return
 

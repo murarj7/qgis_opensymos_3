@@ -5,7 +5,62 @@ class WindRose:
     def __init__(self, df):
         self.df = df
         self.detailed_wind_rose = []
+        self.frequencies = None
         self._build_frequency_matrix()
+
+    def _get_calm_by_stability(self):
+        """
+        Return calm-frequency value for each stability class.
+
+        XML parser stores 'calm' repeatedly in each row of the same stability
+        class, so it is enough to take the first value per class.
+        """
+        calm_by_stability = {}
+
+        if "calm" not in self.df.columns:
+            return calm_by_stability
+
+        grouped = self.df.groupby(self.df["stability"].astype(str))
+        for stability_class, group in grouped:
+            if not group.empty:
+                calm_by_stability[str(stability_class)] = float(group["calm"].iloc[0])
+
+        return calm_by_stability
+
+    def _redistribute_calm_to_first_speed_class(self, coarse_rows, combinations):
+        """
+        Replicate original plugin behaviour:
+        calm frequency is redistributed into the first speed class (1.7 m/s)
+        according to directional weights of that class.
+        """
+        calm_by_stability = self._get_calm_by_stability()
+
+        # Find row index of the first speed class (1.7 m/s) for each stability class
+        first_speed_row_index = {}
+        for idx, (stability_class, representative_speed) in enumerate(combinations):
+            if float(representative_speed) == 1.7 and stability_class not in first_speed_row_index:
+                first_speed_row_index[stability_class] = idx
+
+        for stability_class, row_index in first_speed_row_index.items():
+            calm_value = calm_by_stability.get(stability_class, 0.0)
+            if calm_value == 0.0:
+                continue
+
+            row = coarse_rows[row_index]
+            row_sum = sum(row)
+
+            if row_sum > 0.0:
+                redistributed_row = []
+                for value in row:
+                    weight = value / row_sum
+                    redistributed_row.append(value + weight * calm_value)
+                coarse_rows[row_index] = redistributed_row
+            else:
+                # Robust fallback: if the first speed class has no directional
+                # frequencies at all, distribute calm evenly.
+                coarse_rows[row_index] = [calm_value / 8.0] * 8
+
+        return coarse_rows
 
     def _build_frequency_matrix(self):
         # Ordered combinations exactly as they appear in the SYMOS XML/parser.
@@ -41,14 +96,21 @@ class WindRose:
                     row.append(0.0)
                 else:
                     row.append(float(match["frequency"].iloc[0]))
+
             coarse_rows.append(row)
+
+        # IMPORTANT:
+        # replicate original plugin behaviour by redistributing calm
+        # into the first speed class (1.7 m/s) for each stability class
+        coarse_rows = self._redistribute_calm_to_first_speed_class(coarse_rows, combinations)
 
         azimuth_breaks = [0, 45, 90, 135, 180, 225, 270, 315]
         self.detailed_wind_rose = []
 
-        # Interpolate only the directional distribution from 8 sectors to 360 azimuths.
+        # Interpolate directional distribution from 8 sectors to 360 azimuths.
         for row_index in range(11):
             row_360 = []
+
             for azimuth in range(360):
                 if azimuth < 315:
                     for sector_index in range(0, 7):
@@ -64,7 +126,11 @@ class WindRose:
 
                 interpolated_frequency = (
                     (1.0 / 4500.0)
-                    * (base_frequency + ((azimuth - base_azimuth) / 45.0) * (next_frequency - base_frequency))
+                    * (
+                        base_frequency
+                        + ((azimuth - base_azimuth) / 45.0)
+                        * (next_frequency - base_frequency)
+                    )
                 )
                 row_360.append(interpolated_frequency)
 
@@ -111,3 +177,9 @@ class WindRose:
         for row_index, label in enumerate(labels):
             print(f"{row_index}: {label} -> {self.frequencies[row_index, :].sum()}")
         print("TOTAL =", self.frequencies.sum())
+
+        if "calm" in self.df.columns:
+            calm_total = float(
+                self.df.groupby(self.df["stability"].astype(str))["calm"].first().sum()
+            )
+            print("CALM TOTAL =", calm_total)

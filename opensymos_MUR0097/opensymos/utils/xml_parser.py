@@ -79,6 +79,12 @@ def parse_wind_rose_xml(xml_path):
                     }
                 )
 
+    if not rows:
+        raise ValueError(
+            "Invalid wind rose format. Expected XML structure with "
+            "<trida_stability>, <bezvetri>, <rychlost> and <cetnosti> elements."
+        )
+
     return pd.DataFrame(rows)
 
 
