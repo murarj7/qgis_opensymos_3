@@ -310,6 +310,58 @@ class MainDialog(QDialog):
                     )
 
         return selected_sources
+    
+    def _set_source_elevation_or_fail(self, source, terrain, object_label="Source"):
+        """
+        Set source elevation from DEM.
+        If source lies outside DEM extent or on NoData, stop calculation.
+        """
+        if terrain is None:
+            source.set_elevation(0.0)
+            return True
+
+        z = terrain.get_elevation(source.x, source.y)
+        if z is None:
+            msg = (
+                f"{object_label} {source.id} lies outside DEM extent "
+                f"or on a NoData pixel.\n\n"
+                "Calculation was cancelled."
+            )
+            self.text_log.append(f"❌ {msg}")
+            QMessageBox.critical(self, "DEM Error", msg)
+            self.calculation_finished(None)
+            return False
+
+        source.set_elevation(z)
+        return True
+
+    def _set_receptor_elevation_or_skip(self, receptor, terrain, skipped_counter):
+        """
+        Set receptor elevation from DEM.
+        If receptor lies outside DEM extent or on NoData, skip it.
+
+        Args:
+            receptor: Receptor object
+            terrain: Terrain instance
+            skipped_counter: dict with key 'count'
+
+        Returns:
+            bool: True if receptor is valid and can be used, False if it should be skipped
+        """
+        if terrain is None:
+            receptor.set_elevation(0.0)
+            return True
+
+        z = terrain.get_elevation(receptor.x, receptor.y)
+        if z is None:
+            skipped_counter["count"] += 1
+            self.text_log.append(
+                f"  ⚠ Receptor {receptor.id} lies outside DEM extent or on NoData pixel - skipped"
+            )
+            return False
+
+        receptor.set_elevation(z)
+        return True
 
     def get_selected_source_summary(self):
         """Return a short human-readable summary of selected source types."""
@@ -791,16 +843,14 @@ class MainDialog(QDialog):
         )
 
         if not dem_extent.contains(expanded_extent):
-            reply = QMessageBox.question(
+            QMessageBox.critical(
                 self,
-                "Warning",
-                f"The buffer area ({max_dist}m) extends outside the DEM extent.\n"
-                "Points outside the DEM will be skipped during sampling.\n\n"
-                "Do you want to continue?",
-                QMessageBox.Yes | QMessageBox.No,
+                "DEM Extent Error",
+                f"The buffer area ({max_dist}m) extends outside the DEM extent.\n\n"
+                "Receptors must lie inside the DEM for calculation.\n"
+                "Reduce the maximum distance or use a larger DEM."
             )
-            if reply == QMessageBox.No:
-                return
+            return
 
         generator = AroundFeaturesGenerator()
         result = generator.generate(
@@ -1852,15 +1902,8 @@ class MainDialog(QDialog):
                 
                 source.set_stack_params(height, temp, diam, vel, volume)
 
-                if terrain:
-                    z = terrain.get_elevation(source.x, source.y)
-                    if z is not None:
-                        source.set_elevation(z)
-                    else:
-                        self.text_log.append(f"  ⚠ Source {source.id} outside DEM - using 0")
-                        source.set_elevation(0.0)
-                else:
-                    source.set_elevation(0.0)
+                if not self._set_source_elevation_or_fail(source, terrain, "Source"):
+                    return
 
                 sources.append(source)
                 source_count += 1
@@ -1986,17 +2029,8 @@ class MainDialog(QDialog):
                                         segment_length=float(segment_length),
                                     )
 
-                                if terrain:
-                                    z = terrain.get_elevation(source.x, source.y)
-                                    if z is not None:
-                                        source.set_elevation(z)
-                                    else:
-                                        self.text_log.append(
-                                            f"  ⚠ Line source {source.id} outside DEM - using 0"
-                                        )
-                                        source.set_elevation(0.0)
-                                else:
-                                    source.set_elevation(0.0)
+                                if not self._set_source_elevation_or_fail(source, terrain, "Line source"):
+                                    return
 
                                 sources.append(source)
                                 source_count += 1
@@ -2116,17 +2150,8 @@ class MainDialog(QDialog):
                                 source.set_release_height(float(release_height_val))
                                 source.set_area_params()
 
-                                if terrain:
-                                    z = terrain.get_elevation(source.x, source.y)
-                                    if z is not None:
-                                        source.set_elevation(z)
-                                    else:
-                                        self.text_log.append(
-                                            f"  ⚠ Area source {source.id} outside DEM - using 0"
-                                        )
-                                        source.set_elevation(0.0)
-                                else:
-                                    source.set_elevation(0.0)
+                                if not self._set_source_elevation_or_fail(source, terrain, "Area source"):
+                                    return
 
                                 sources.append(source)
                                 source_count += 1
@@ -2151,6 +2176,7 @@ class MainDialog(QDialog):
 
             self.text_log.append(f"\n--- Processing imported receptors: {layer.name()} ---")
             imported_count = 0
+            skipped_imported = {"count": 0}
 
             for feature in layer.getFeatures():
                 field_names = [field.name() for field in feature.fields()]
@@ -2167,15 +2193,8 @@ class MainDialog(QDialog):
                     height_above=self.spin_import_height.value(),
                 )
 
-                if terrain:
-                    z = terrain.get_elevation(receptor.x, receptor.y)
-                    if z is not None:
-                        receptor.set_elevation(z)
-                    else:
-                        self.text_log.append(f"  ⚠ Receptor {receptor.id} outside DEM - using 0")
-                        receptor.set_elevation(0.0)
-                else:
-                    receptor.set_elevation(0.0)
+                if not self._set_receptor_elevation_or_skip(receptor, terrain, skipped_imported):
+                    continue
 
                 receptors.append(receptor)
                 imported_count += 1
@@ -2185,6 +2204,10 @@ class MainDialog(QDialog):
                     self.text_log.append(f"  Loaded {receptor_count} receptors...")
 
             self.text_log.append(f"✓ Loaded {imported_count} imported receptors")
+            if skipped_imported["count"] > 0:
+                self.text_log.append(
+                    f"⚠ Skipped {skipped_imported['count']} imported receptor(s) outside DEM extent or on NoData"
+                )
 
         if self.groupBox_regular.isChecked() and self.combo_extent_layer.currentIndex() > 0:
             extent_layer_id = self.combo_extent_layer.currentData()
@@ -2207,6 +2230,7 @@ class MainDialog(QDialog):
                     self.text_log.append("❌ Failed to generate regular grid receptors")
                 else:
                     regular_count = 0
+                    skipped_regular = {"count": 0}
 
                     for feature in generated_layer.getFeatures():
                         point = feature.geometry().asPoint()
@@ -2219,15 +2243,8 @@ class MainDialog(QDialog):
                         )
                         receptor.set_height_above(self.spin_regular_height.value())
 
-                        if terrain:
-                            z = terrain.get_elevation(receptor.x, receptor.y)
-                            if z is not None:
-                                receptor.set_elevation(z)
-                            else:
-                                self.text_log.append(f"  ⚠ Receptor {receptor.id} outside DEM - using 0")
-                                receptor.set_elevation(0.0)
-                        else:
-                            receptor.set_elevation(0.0)
+                        if not self._set_receptor_elevation_or_skip(receptor, terrain, skipped_regular):
+                            continue
 
                         receptors.append(receptor)
                         regular_count += 1
@@ -2237,6 +2254,10 @@ class MainDialog(QDialog):
                             self.text_log.append(f"  Loaded {receptor_count} receptors...")
 
                     self.text_log.append(f"✓ Generated and loaded {regular_count} regular grid receptors")
+                    if skipped_regular["count"] > 0:
+                        self.text_log.append(
+                            f"⚠ Skipped {skipped_regular['count']} regular receptor(s) outside DEM extent or on NoData"
+                        )
 
         if self.groupBox_around.isChecked() and self.combo_features_layer.currentIndex() > 0:
             features_layer_id = self.combo_features_layer.currentData()
@@ -2273,15 +2294,8 @@ class MainDialog(QDialog):
                         )
                         receptor.set_height_above(self.spin_around_height.value())
 
-                        if terrain:
-                            z = terrain.get_elevation(receptor.x, receptor.y)
-                            if z is not None:
-                                receptor.set_elevation(z)
-                            else:
-                                self.text_log.append(f"  ⚠ Receptor {receptor.id} outside DEM - using 0")
-                                receptor.set_elevation(0.0)
-                        else:
-                            receptor.set_elevation(0.0)
+                        if not self._set_elevation_or_fail(receptor, terrain, "Receptor"):
+                            return
 
                         receptors.append(receptor)
                         around_count += 1
