@@ -253,6 +253,28 @@ class MainDialog(QDialog):
             if field.type() in numeric_types
         ]
 
+    def _safe_float_attr(self, raw_value, field_name, source_id, object_label):
+        """
+        Safely convert attribute value to float.
+        Raises ValueError with a user-friendly message for NULL / NoData / invalid values.
+        """
+        if raw_value is None:
+            raise ValueError(
+                f"{object_label} {source_id}: field '{field_name}' contains NULL / NoData value."
+            )
+
+        if isinstance(raw_value, QVariant) and raw_value.isNull():
+            raise ValueError(
+                f"{object_label} {source_id}: field '{field_name}' contains NULL / NoData value."
+            )
+
+        try:
+            return float(raw_value)
+        except (TypeError, ValueError):
+            raise ValueError(
+                f"{object_label} {source_id}: field '{field_name}' contains a non-numeric value ({raw_value})."
+            )
+
     def update_source_attributes(self, source_type):
         """Update attribute comboboxes based on selected layer."""
         mapping = {
@@ -1890,76 +1912,106 @@ class MainDialog(QDialog):
             layer_id = self.combo_point_layer.currentData()
             layer = QgsProject.instance().mapLayer(layer_id)
 
-            self.text_log.append(f"\n--- Processing point sources: {layer.name()} ---")
+            if layer:
+                self.text_log.append(f"\n--- Processing point sources: {layer.name()} ---")
 
-            for feature in layer.getFeatures():
-                field_names = [field.name() for field in feature.fields()]
+                try:
+                    for feature in layer.getFeatures():
+                        field_names = [field.name() for field in feature.fields()]
 
-                source_id = feature.id()
-                for field_name in field_names:
-                    if field_name.lower() == "id":
-                        source_id = feature[field_name]
-                        break
+                        source_id = feature.id()
+                        for field_name in field_names:
+                            if field_name.lower() == "id":
+                                source_id = feature[field_name]
+                                break
 
-                source = Source(
-                    source_id=source_id,
-                    geometry=feature.geometry(),
-                    source_type="point",
-                )
+                        source = Source(
+                            source_id=source_id,
+                            geometry=feature.geometry(),
+                            source_type="point",
+                        )
 
-                emission_field = self.combo_point_emission.currentText()
-                if emission_field and emission_field in field_names:
-                    emission = feature[emission_field]
-                else:
-                    emission = 0.0
-                    self.text_log.append(
-                        f"  ⚠ Feature {source_id}: emission field '{emission_field}' not found"
+                        emission_field = self.combo_point_emission.currentText().strip()
+                        if emission_field and emission_field in field_names:
+                            emission = self._safe_float_attr(
+                                feature[emission_field], emission_field, source_id, "Point source"
+                            )
+                        else:
+                            emission = 0.0
+                            self.text_log.append(
+                                f"  ⚠ Feature {source_id}: emission field '{emission_field}' not found"
+                            )
+
+                        height_field = self.combo_point_height.currentText().strip()
+                        height = (
+                            self._safe_float_attr(feature[height_field], height_field, source_id, "Point source")
+                            if height_field in field_names else 15.0
+                        )
+
+                        temp_field = self.combo_point_temp.currentText().strip()
+                        temp = (
+                            self._safe_float_attr(feature[temp_field], temp_field, source_id, "Point source")
+                            if temp_field in field_names else 80.0
+                        )
+
+                        diam_field = self.combo_point_diam.currentText().strip()
+                        diam = (
+                            self._safe_float_attr(feature[diam_field], diam_field, source_id, "Point source")
+                            if diam_field in field_names else 0.5
+                        )
+
+                        vel_field = self.combo_point_vel.currentText().strip()
+                        vel = (
+                            self._safe_float_attr(feature[vel_field], vel_field, source_id, "Point source")
+                            if vel_field in field_names else 8.0
+                        )
+
+                        volume_field = self.combo_point_volume.currentText().strip()
+                        volume = (
+                            self._safe_float_attr(feature[volume_field], volume_field, source_id, "Point source")
+                            if volume_field in field_names else 4.0
+                        )
+
+                        year_field = self.combo_point_year.currentText().strip()
+                        year_use_raw = feature[year_field] if year_field in field_names else 100.0
+                        year_use = self._safe_float_attr(year_use_raw, year_field or "year_use", source_id, "Point source")
+
+                        if year_use > 1.0:
+                            year_use /= 100.0
+                        year_use = max(0.0, min(1.0, year_use))
+
+                        day_field = self.combo_point_day.currentText().strip()
+                        day_use_raw = feature[day_field] if day_field in field_names else 24.0
+                        day_use = self._safe_float_attr(day_use_raw, day_field or "day_use", source_id, "Point source")
+
+                        if day_use > 24.0:
+                            day_use = 24.0
+                        elif day_use < 0.0:
+                            day_use = 0.0
+
+                        annual_util = year_use * (day_use / 24.0)
+
+                        source.set_emission_params(emission, annual_util)
+                        source.set_stack_params(height, temp, diam, vel, volume)
+
+                        if not self._set_source_elevation_or_fail(source, terrain, "Point source"):
+                            return
+
+                        sources.append(source)
+                        source_count += 1
+
+                        if source_count % 25 == 0:
+                            self.text_log.append(f"  Loaded {source_count} sources...")
+
+                except Exception as e:
+                    self.text_log.append(f"❌ Error processing point sources: {str(e)}")
+                    QMessageBox.critical(
+                        self,
+                        "Source Data Error",
+                        f"Failed to process point sources:\n{str(e)}"
                     )
-
-                height_field = self.combo_point_height.currentText()
-                height = feature[height_field] if height_field in field_names else 15.0
-
-                temp_field = self.combo_point_temp.currentText()
-                temp = feature[temp_field] if temp_field in field_names else 80.0
-
-                diam_field = self.combo_point_diam.currentText()
-                diam = feature[diam_field] if diam_field in field_names else 0.5
-
-                vel_field = self.combo_point_vel.currentText()
-                vel = feature[vel_field] if vel_field in field_names else 8.0
-
-                volume_field = self.combo_point_volume.currentText()
-                volume = feature[volume_field] if volume_field in field_names else 4.0
-
-                year_field = self.combo_point_year.currentText()
-                year_use_raw = feature[year_field] if year_field in field_names else 100.0
-                year_use = float(year_use_raw)
-
-                if year_use > 1.0:
-                    year_use /= 100.0
-
-                year_use = max(0.0, min(1.0, year_use))
-
-                day_field = self.combo_point_day.currentText()
-                day_use_raw = feature[day_field] if day_field in field_names else 24.0
-                day_use = float(day_use_raw)
-
-                if day_use > 24.0:
-                    day_use = 24.0
-                elif day_use < 0.0:
-                    day_use = 0.0
-
-                annual_util = year_use * (day_use / 24.0)
-
-                source.set_emission_params(emission, annual_util)
-                
-                source.set_stack_params(height, temp, diam, vel, volume)
-
-                if not self._set_source_elevation_or_fail(source, terrain, "Source"):
+                    self.calculation_finished(None)
                     return
-
-                sources.append(source)
-                source_count += 1
 
         # 4.2 Line sources
         if self.combo_line_layer.currentIndex() > 0:
