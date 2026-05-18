@@ -126,45 +126,46 @@ class ResultsCollection:
             stats['min'] = stats['max'] = stats['mean'] = stats['sum'] = 0
         
         return stats
-    
+
     def create_qgis_layer(self, layer_name="Calculation Results"):
         """
         Create a QGIS memory layer from results.
-        
-        Args:
-            layer_name: str - name for the layer
-        
-        Returns:
-            QgsVectorLayer: memory layer with results or None if no results
+        Universal solution for QGIS 3.x
         """
         if self.is_empty():
             print("No results to create layer")
             return None
-        
+
         if self.crs is None:
             print("Warning: No CRS set for results, using default")
-            self.crs = QgsCoordinateReferenceSystem("EPSG:5514")  # Default to JTSK
-        
+            self.crs = QgsCoordinateReferenceSystem("EPSG:5514")
+
         # Create memory layer
         layer = QgsVectorLayer(
             f"Point?crs={self.crs.authid()}",
             layer_name,
             "memory"
         )
+
         provider = layer.dataProvider()
-        
-        # Add fields based on calculation type
+
+        # Add fields
         fields = self._create_fields()
         provider.addAttributes(fields)
         layer.updateFields()
-        
-        # Add features
+
+        # Add features - using LAYER method (works everywhere)
+        layer.startEditing()
         features = self._create_features()
-        provider.addFeatures(features)
-        
+        print(f"Adding {len(features)} features")
+        layer.addFeatures(features)  # Changed to layer instead of provider
+        layer.commitChanges()
+
         # Update extent
         layer.updateExtents()
-        
+
+        print(f"Layer created: {layer.featureCount()} features")
+
         return layer
     
     def _create_fields(self):
@@ -211,6 +212,7 @@ class ResultsCollection:
         features = []
         
         for r in self.results:
+            print(r)
             f = QgsFeature()
             
             # Set geometry
@@ -230,7 +232,7 @@ class ResultsCollection:
                 attrs.append(r.max_direction)
             
             elif r.result_type == Result.TYPE_ANNUAL_AVERAGE:
-                attrs.append(r.annual_average)
+                attrs.append(float(r.annual_average))
             
             elif r.result_type == Result.TYPE_EXCEEDANCE_TIME:
                 attrs.append(r.exceedance_time)
