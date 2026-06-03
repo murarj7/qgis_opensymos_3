@@ -81,22 +81,28 @@ class LineToPointConverter:
                     continue
 
                 original_id = line_feature[id_field] if id_field else line_feature.id()
-                distances = self._generate_distances(total_length, spacing)
+                segments = self._generate_segments(total_length, spacing)
 
-                for dist_along in distances:
+                emitted_so_far = 0.0
+
+                for idx, segment in enumerate(segments):
+                    dist_along = segment["center"]
+                    segment_length = segment["length"]
+
                     point_geom = self._interpolate_point_geometry(line_geom, dist_along)
                     if point_geom is None:
                         continue
 
-                    seg_start = max(0.0, dist_along - spacing / 2.0)
-                    seg_end = min(total_length, dist_along + spacing / 2.0)
-                    segment_length = seg_end - seg_start
-
                     if segment_length <= 0:
                         continue
 
-                    # Redistribute TOTAL line emission proportionally by represented segment length
-                    point_emission = total_emission * (segment_length / total_length)
+                    # Redistribute TOTAL line emission proportionally by represented segment length.
+                    # For the last segment, use the remaining emission to avoid tiny floating-point drift.
+                    if idx == len(segments) - 1:
+                        point_emission = total_emission - emitted_so_far
+                    else:
+                        point_emission = total_emission * (segment_length / total_length)
+                        emitted_so_far += point_emission
 
                     new_feature = QgsFeature(point_layer.fields())
                     new_feature.setGeometry(point_geom)
@@ -197,37 +203,37 @@ class LineToPointConverter:
             print(f"Error creating output layer: {e}")
             return None
 
-    def _generate_distances(self, total_length, spacing):
+    def _generate_segments(self, total_length, spacing):
         """
-        Generate point positions along line in the middle of represented segments.
+        Generate non-overlapping line segments and their point positions.
 
-        Example for spacing=50 and line length=180:
-        points at 25, 75, 125, 165
-        represented segment lengths:
-            50, 50, 50, 30
+        Each output point is placed at the center of its represented segment.
+        The last segment gets only the real remaining length, so the sum of
+        segment_length values is always equal to total_length.
+
+        Example for spacing=3 and line length=10:
+            centers: 1.5, 4.5, 7.5, 9.5
+            lengths: 3.0, 3.0, 3.0, 1.0
         """
-        distances = []
+        segments = []
+        start = 0.0
 
-        current = spacing / 2.0
-        while current < total_length:
-            distances.append(current)
-            current += spacing
+        while start < total_length:
+            end = min(start + spacing, total_length)
+            length = end - start
 
-        # If line is shorter than spacing, place one point in the middle
-        if not distances:
-            distances.append(total_length / 2.0)
+            if length > 0:
+                center = (start + end) / 2.0
+                segments.append({
+                    "start": start,
+                    "end": end,
+                    "center": center,
+                    "length": length
+                })
 
-        # Handle tail remainder
-        last_center = distances[-1]
-        last_seg_end = min(total_length, last_center + spacing / 2.0)
+            start += spacing
 
-        if total_length - last_seg_end > 1e-9:
-            tail_start = last_seg_end
-            tail_end = total_length
-            tail_center = (tail_start + tail_end) / 2.0
-            distances.append(tail_center)
-
-        return distances
+        return segments
 
     def _interpolate_point_geometry(self, line_geom, distance):
         """
